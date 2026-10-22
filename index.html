@@ -3,21 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شاشة كربلاء الذكية | Smart Screen</title>
+    <title>الشاشة الذكية للمواقيت والطقس | Smart Screen</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-theme="emerald">
+    <!-- خلفية الزخرفة الإسلامية الهندسية الهادئة -->
+    <div class="islamic-pattern-overlay"></div>
+
     <div class="dashboard-container">
         
-        <!-- الرأس العلوي: الساعة، التاريخ، والمدينة -->
+        <!-- الرأس العلوي: الساعة، التاريخ، المدينة، وأزرار التحكم -->
         <header class="header-card">
-            <div class="location-badge">
-                <span class="icon">📍</span>
-                <span class="city-name">العراق - كربلاء المقدسة</span>
+            <div class="header-right">
+                <div class="location-badge" id="current-location-display">
+                    <span class="icon">📍</span>
+                    <span class="city-name" id="display-city-name">العراق - كربلاء المقدسة</span>
+                </div>
+                
+                <!-- أزرار التحكم السريعة (الصوت والإعدادات) -->
+                <div class="quick-controls">
+                    <button id="audio-toggle-btn" class="ctrl-btn" aria-label="تشغيل أو كتم الصوت" title="تشغيل / كتم الصوت الهادئ">
+                        <span id="audio-icon">🔇</span>
+                        <span class="btn-label" id="audio-label">الصوت: صامت</span>
+                    </button>
+                    <button id="settings-open-btn" class="ctrl-btn settings-btn" aria-label="فتح الإعدادات والسكنات" title="تغيير المدينة، المظهر، والإعلانات">
+                        <span class="icon">⚙️</span>
+                        <span class="btn-label">الإعدادات والسكنات</span>
+                    </button>
+                </div>
             </div>
+
             <div class="clock-section">
                 <div id="live-clock" class="digital-clock">--:--:--</div>
                 <div class="date-container">
@@ -26,6 +44,7 @@
                     <span id="hijri-date" class="date-tag hijri">--</span>
                 </div>
             </div>
+
             <div class="next-prayer-banner" id="next-prayer-container">
                 <span class="label">الصلاة القادمة:</span>
                 <span id="next-prayer-name" class="prayer-highlight">--</span>
@@ -98,11 +117,113 @@
             <div class="ticker-badge">📢 إعلان / تنبيه</div>
             <div class="ticker-wrapper">
                 <div class="ticker-text" id="announcement-text">
-                    مرحباً بكم في شاشة العرض الذكية • أهلاً بكم في كربلاء المقدسة • نسألكم الدعاء • لتغيير نص الإعلان يمكنك تعديل ملف الإعدادات
+                    مرحباً بكم في الشاشة الذكية • نسألكم الدعاء • لتعديل الإعلان أو المدينة اضغط على زر الإعدادات
                 </div>
             </div>
         </footer>
 
+    </div>
+
+    <!-- نافذة الإعدادات والسكنات واختيار المدينة (Modal) -->
+    <div id="settings-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ إعدادات الشاشة والمظهر</h2>
+                <button id="settings-close-btn" class="close-btn" aria-label="إغلاق">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                
+                <!-- 1. اختيار المدينة / الدولة -->
+                <div class="setting-group">
+                    <label for="city-selector">📍 اختيار المدينة / الدولة:</label>
+                    <select id="city-selector" class="custom-select">
+                        <optgroup label="العراق 🇮🇶">
+                            <option value="karbala" selected>كربلاء المقدسة</option>
+                            <option value="najaf">النجف الأشرف</option>
+                            <option value="baghdad">بغداد</option>
+                            <option value="basra">البصرة</option>
+                            <option value="erbil">أربيل</option>
+                            <option value="mosul">الموصل</option>
+                            <option value="samarra">سامراء</option>
+                            <option value="hilla">بابل (الحلة)</option>
+                            <option value="nasiriyah">ذي قار (الناصرية)</option>
+                            <option value="sulaymaniyah">السليمانية</option>
+                            <option value="kirkuk">كركوك</option>
+                        </optgroup>
+                        <optgroup label="مدن وعواصم إسلامية 🌍">
+                            <option value="makkah">مكة المكرمة 🇸🇦</option>
+                            <option value="madinah">المدينة المنورة 🇸🇦</option>
+                            <option value="jerusalem">القدس الشريف 🇵🇸</option>
+                            <option value="damascus">دمشق 🇸🇾</option>
+                            <option value="beirut">بيروت 🇱🇧</option>
+                            <option value="amman">عمان 🇯🇴</option>
+                            <option value="cairo">القاهرة 🇪🇬</option>
+                            <option value="kuwait">الكويت 🇰🇼</option>
+                            <option value="riyadh">الرياض 🇸🇦</option>
+                            <option value="dubai">دبي 🇦🇪</option>
+                            <option value="tehran">طهران 🇮🇷</option>
+                            <option value="mashhad">مشهد المقدسة 🇮🇷</option>
+                            <option value="istanbul">إسطنبول 🇹🇷</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- 2. المظهر والألوان (السكنات) -->
+                <div class="setting-group">
+                    <label>🎨 اختر سكن الشاشة (ألوان هادئة وطراز إسلامي):</label>
+                    <div class="themes-grid">
+                        <button type="button" class="theme-card active" data-theme="emerald">
+                            <div class="theme-preview emerald-preview"></div>
+                            <span>الزمردي الكربلائي</span>
+                        </button>
+                        <button type="button" class="theme-card" data-theme="midnight">
+                            <div class="theme-preview midnight-preview"></div>
+                            <span>الليلي الملكي</span>
+                        </button>
+                        <button type="button" class="theme-card" data-theme="amber">
+                            <div class="theme-preview amber-preview"></div>
+                            <span>العنبر الدافئ</span>
+                        </button>
+                        <button type="button" class="theme-card" data-theme="olive">
+                            <div class="theme-preview olive-preview"></div>
+                            <span>الزيتوني الأندلسي</span>
+                        </button>
+                        <button type="button" class="theme-card" data-theme="slate">
+                            <div class="theme-preview slate-preview"></div>
+                            <span>الفيروزي الهادئ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. إعدادات الصوت الموسيقي الهادئ -->
+                <div class="setting-group">
+                    <label>🎵 الصوت المحيطي الهادئ:</label>
+                    <div class="audio-settings-box">
+                        <button type="button" id="modal-audio-btn" class="action-btn">
+                            <span id="modal-audio-icon">🔇</span>
+                            <span id="modal-audio-text">تشغيل النغمات الهادئة</span>
+                        </button>
+                        <div class="volume-slider-box">
+                            <span>مستوى الصوت:</span>
+                            <input type="range" id="volume-slider" min="0" max="100" value="40">
+                            <span id="volume-value">40%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. تعديل نص شريط الإعلانات -->
+                <div class="setting-group">
+                    <label for="announcement-input">📢 نص الإعلان / التنبيه في أسفل الشاشة:</label>
+                    <textarea id="announcement-input" rows="3" class="custom-textarea" placeholder="اكتب هنا الإعلان أو التنبيهات..."></textarea>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="save-settings-btn" class="save-btn">💾 حفظ التغييرات</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
