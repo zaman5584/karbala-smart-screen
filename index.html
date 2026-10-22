@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شاشة كربلاء الذكية | Smart Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <!-- الرأس العلوي: الساعة، التاريخ، والمدينة -->
+        <header class="header-card">
+            <div class="location-badge">
+                <span class="icon">📍</span>
+                <span class="city-name">العراق - كربلاء المقدسة</span>
+            </div>
+            <div class="clock-section">
+                <div id="live-clock" class="digital-clock">--:--:--</div>
+                <div class="date-container">
+                    <span id="gregorian-date" class="date-tag">--</span>
+                    <span class="dot-separator">•</span>
+                    <span id="hijri-date" class="date-tag hijri">--</span>
+                </div>
+            </div>
+            <div class="next-prayer-banner" id="next-prayer-container">
+                <span class="label">الصلاة القادمة:</span>
+                <span id="next-prayer-name" class="prayer-highlight">--</span>
+                <span class="countdown" id="next-prayer-countdown">--:--:--</span>
+            </div>
+        </header>
+
+        <!-- المحتوى الرئيسي: الطقس وأوقات الصلاة -->
+        <main class="main-content">
+            
+            <!-- قسم الطقس -->
+            <section class="card weather-card">
+                <h2 class="card-title"><span class="icon">🌤️</span> الطقس المباشر</h2>
+                <div class="weather-body">
+                    <div class="temp-display">
+                        <span id="weather-temp" class="temperature">--</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                    <div class="weather-details">
+                        <div id="weather-condition" class="condition-text">جاري التحميل...</div>
+                        <div class="extra-info">
+                            <div class="info-item">
+                                <span class="info-label">💧 الرطوبة:</span>
+                                <span id="weather-humidity">--%</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">💨 الرياح:</span>
+                                <span id="weather-wind">-- كم/س</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم أوقات الصلاة -->
+            <section class="card prayers-card">
+                <h2 class="card-title"><span class="icon">🕌</span> مواقيت الصلاة</h2>
+                <div class="prayers-grid">
+                    <div class="prayer-box" id="box-Fajr">
+                        <span class="prayer-name">الفجر</span>
+                        <span class="prayer-time" id="time-Fajr">--:--</span>
+                    </div>
+                    <div class="prayer-box" id="box-Sunrise">
+                        <span class="prayer-name">الشروق</span>
+                        <span class="prayer-time" id="time-Sunrise">--:--</span>
+                    </div>
+                    <div class="prayer-box" id="box-Dhuhr">
+                        <span class="prayer-name">الظهر</span>
+                        <span class="prayer-time" id="time-Dhuhr">--:--</span>
+                    </div>
+                    <div class="prayer-box" id="box-Asr">
+                        <span class="prayer-name">العصر</span>
+                        <span class="prayer-time" id="time-Asr">--:--</span>
+                    </div>
+                    <div class="prayer-box" id="box-Maghrib">
+                        <span class="prayer-name">المغرب</span>
+                        <span class="prayer-time" id="time-Maghrib">--:--</span>
+                    </div>
+                    <div class="prayer-box" id="box-Isha">
+                        <span class="prayer-name">العشاء</span>
+                        <span class="prayer-time" id="time-Isha">--:--</span>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- الشريط الإعلاني / التنبيهات في الأسفل -->
+        <footer class="announcement-bar">
+            <div class="ticker-badge">📢 إعلان / تنبيه</div>
+            <div class="ticker-wrapper">
+                <div class="ticker-text" id="announcement-text">
+                    مرحباً بكم في شاشة العرض الذكية • أهلاً بكم في كربلاء المقدسة • نسألكم الدعاء • لتغيير نص الإعلان يمكنك تعديل ملف الإعدادات
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
