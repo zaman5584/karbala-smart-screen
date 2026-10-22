@@ -34,132 +34,180 @@ const CITIES = {
 // ==========================================
 // إدارة حالة النظام والتفضيلات (State & Storage)
 // ==========================================
-const DEFAULT_ANNOUNCEMENT = "مرحباً بكم في الشاشة الذكية • نسألكم الدعاء • أهلاً بكم في كربلاء المقدسة";
+const DEFAULT_ANNOUNCEMENT = "مرحباً بكم في الشاشة الذكية • أهلاً بكم في كربلاء المقدسة • نسألكم الدعاء";
 
 let state = {
     cityKey: localStorage.getItem('smartScreen_city') || 'karbala',
     theme: localStorage.getItem('smartScreen_theme') || 'emerald',
     announcement: localStorage.getItem('smartScreen_announcement') || DEFAULT_ANNOUNCEMENT,
-    audioEnabled: localStorage.getItem('smartScreen_audio_enabled') === 'true',
-    volume: parseFloat(localStorage.getItem('smartScreen_volume') || '0.35')
+    volume: parseFloat(localStorage.getItem('smartScreen_volume') || '0.7')
 };
 
 // ========================================================
-// 1. نظام الصوت الهادئ التوليدي (Web Audio Ambient Engine)
-// يعمل 100% دون الحاجة إلى ملفات خارجية أو إنترنت سريع!
+// 1. نظام الصوت الهادئ (مشغل الصوت والمولد التوليدي)
 // ========================================================
+let isAudioPlaying = false;
 let audioCtx = null;
 let masterGain = null;
-let ambientInterval = null;
-let isAudioPlaying = false;
+let synthOscillators = [];
+let chimeTimer = null;
 
-function initAudioSystem() {
+function initWebAudio() {
     if (audioCtx) return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.setValueAtTime(state.volume, audioCtx.currentTime);
-    masterGain.connect(audioCtx.destination);
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(state.volume, audioCtx.currentTime);
+        masterGain.connect(audioCtx.destination);
+    } catch (e) {
+        console.warn("Web Audio not supported:", e);
+    }
 }
 
-// توليد نغمة دافئة وهادئة تماثل الأجواء الروحانية الهادئة
-function playHarmonicChime() {
-    if (!audioCtx || !isAudioPlaying) return;
-
-    // درجات مقام خماسي هادئ (Pentatonic Scale) مريح جداً للأذن
-    const notes = [196.00, 220.00, 261.63, 293.66, 329.63, 392.00]; 
-    const freq = notes[Math.floor(Math.random() * notes.length)];
-
-    const osc = audioCtx.createOscillator();
-    const noteGain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-
-    // فلتر ناعم لتقليل الحدة
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(600, audioCtx.currentTime);
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-    // صعود وهبوط تدريجي ناعم جداً للنغمة
-    const now = audioCtx.currentTime;
-    noteGain.gain.setValueAtTime(0, now);
-    noteGain.gain.linearRampToValueAtTime(0.2, now + 2);
-    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 7);
-
-    osc.connect(filter);
-    filter.connect(noteGain);
-    noteGain.connect(masterGain);
-
-    osc.start(now);
-    osc.stop(now + 7.5);
-}
-
-function startAmbientSound() {
-    initAudioSystem();
+// توليد خلفية صوتية روحانية مستمرة ودافئة
+function startContinuousSynth() {
+    initWebAudio();
+    if (!audioCtx) return;
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
-    isAudioPlaying = true;
-    updateAudioUI(true);
 
-    // عزف أول نغمة، ثم تكرار نغمات هادئة كل 4 إلى 8 ثوانٍ
-    playHarmonicChime();
-    if (ambientInterval) clearInterval(ambientInterval);
-    ambientInterval = setInterval(() => {
-        if (isAudioPlaying) {
-            playHarmonicChime();
-        }
-    }, 5500);
+    stopContinuousSynth(); // تنظيف أي مذبذب سابق
+
+    // نغمات متناسقة وهادئة جداً (مقام مريح للأعصاب)
+    const freqs = [220.0, 329.63, 440.0]; // A3, E4, A4
+
+    synthOscillators = freqs.map(freq => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start();
+        return { osc, gain };
+    });
+
+    // نغمة رنين خفيفة متباعدة
+    playGentleChime();
+    chimeTimer = setInterval(playGentleChime, 6000);
 }
 
-function stopAmbientSound() {
-    isAudioPlaying = false;
-    if (ambientInterval) clearInterval(ambientInterval);
-    if (audioCtx) {
-        audioCtx.suspend();
+function playGentleChime() {
+    if (!audioCtx || !isAudioPlaying) return;
+    const notes = [523.25, 659.25, 783.99, 880.00]; // C5, E5, G5, A5
+    const freq = notes[Math.floor(Math.random() * notes.length)];
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    const now = audioCtx.currentTime;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 4);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 4.2);
+}
+
+function stopContinuousSynth() {
+    if (chimeTimer) {
+        clearInterval(chimeTimer);
+        chimeTimer = null;
     }
-    updateAudioUI(false);
+    synthOscillators.forEach(item => {
+        try {
+            item.osc.stop();
+            item.osc.disconnect();
+        } catch (e) {}
+    });
+    synthOscillators = [];
+}
+
+// تشغيل الصوت الهادئ (أيقونة ▶ و ⏸ فقط)
+function playAudio() {
+    const audioPlayer = document.getElementById('ambient-audio-player');
+    isAudioPlaying = true;
+
+    // 1. محاولة تشغيل مشغل الصوت الأساسي
+    if (audioPlayer) {
+        audioPlayer.volume = state.volume;
+        audioPlayer.play().catch(err => {
+            console.log("Audio file play fallback to Web Audio synth:", err);
+            startContinuousSynth();
+        });
+    }
+
+    // 2. تشغيل المولد الصوتي التوليدي لضمان وجود صوت نقي دائماً
+    startContinuousSynth();
+
+    updateAudioButtons(true);
+}
+
+function stopAudio() {
+    const audioPlayer = document.getElementById('ambient-audio-player');
+    isAudioPlaying = false;
+
+    if (audioPlayer) {
+        audioPlayer.pause();
+    }
+    stopContinuousSynth();
+
+    updateAudioButtons(false);
 }
 
 function toggleAudio() {
     if (isAudioPlaying) {
-        stopAmbientSound();
-        state.audioEnabled = false;
+        stopAudio();
     } else {
-        startAmbientSound();
-        state.audioEnabled = true;
+        playAudio();
     }
-    localStorage.setItem('smartScreen_audio_enabled', state.audioEnabled);
+}
+
+// تحديث أيقونة الزر (مثلث التشغيل ▶ أو رمز الإيقاف ⏸ فقط بدون نصوص)
+function updateAudioButtons(playing) {
+    const mainIcon = document.getElementById('audio-icon');
+    const mainBtn = document.getElementById('audio-toggle-btn');
+    const modalIcon = document.getElementById('modal-audio-icon');
+
+    if (playing) {
+        if (mainIcon) mainIcon.textContent = '⏸';
+        if (modalIcon) modalIcon.textContent = '⏸';
+        if (mainBtn) mainBtn.classList.add('playing');
+    } else {
+        if (mainIcon) mainIcon.textContent = '▶';
+        if (modalIcon) modalIcon.textContent = '▶';
+        if (mainBtn) mainBtn.classList.remove('playing');
+    }
 }
 
 function setVolume(val) {
     state.volume = val;
     localStorage.setItem('smartScreen_volume', val);
+
+    const audioPlayer = document.getElementById('ambient-audio-player');
+    if (audioPlayer) {
+        audioPlayer.volume = val;
+    }
     if (masterGain && audioCtx) {
         masterGain.gain.setValueAtTime(val, audioCtx.currentTime);
-    }
-}
-
-function updateAudioUI(isPlaying) {
-    const mainIcon = document.getElementById('audio-icon');
-    const mainLabel = document.getElementById('audio-label');
-    const mainBtn = document.getElementById('audio-toggle-btn');
-    const modalIcon = document.getElementById('modal-audio-icon');
-    const modalText = document.getElementById('modal-audio-text');
-
-    if (isPlaying) {
-        mainIcon.textContent = '🔊';
-        mainLabel.textContent = 'الصوت: يعمل';
-        mainBtn.classList.add('active-sound');
-        modalIcon.textContent = '🔊';
-        modalText.textContent = 'إيقاف الصوت الهادئ';
-    } else {
-        mainIcon.textContent = '🔇';
-        mainLabel.textContent = 'الصوت: صامت';
-        mainBtn.classList.remove('active-sound');
-        modalIcon.textContent = '🔇';
-        modalText.textContent = 'تشغيل النغمات الهادئة';
     }
 }
 
@@ -326,14 +374,13 @@ async function fetchWeather() {
 }
 
 // ========================================================
-// 5. إدارة المظهر (السكنات) والإعلانات والمدينة
+// 5. إدارة المظهر (السكنات) والإعلانات واختيار المدينة
 // ========================================================
 function applyTheme(themeName) {
     state.theme = themeName;
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('smartScreen_theme', themeName);
 
-    // تحديث البطاقة النشطة في النافذة
     document.querySelectorAll('.theme-card').forEach(card => {
         if (card.dataset.theme === themeName) {
             card.classList.add('active');
@@ -350,9 +397,17 @@ function applyCity(cityKey) {
 
     const city = CITIES[cityKey];
     document.getElementById('display-city-name').textContent = `${city.country} - ${city.name}`;
-    document.getElementById('city-selector').value = cityKey;
 
-    // إعادة جلب المواقيت والطقس للمدينة الجديدة
+    // تمييز زر المدينة النشطة في النافذة
+    document.querySelectorAll('.city-btn').forEach(btn => {
+        if (btn.dataset.city === cityKey) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // جلب المواقيت والطقس للمدينة المختارة
     fetchPrayerTimes();
     fetchWeather();
 }
@@ -365,7 +420,7 @@ function applyAnnouncement(text) {
 }
 
 // ========================================================
-// 6. تهيئة نافذة الإعدادات والأحداث
+// 6. تهيئة الأحداث والأزرار
 // ========================================================
 function setupEventListeners() {
     const modal = document.getElementById('settings-modal');
@@ -377,7 +432,7 @@ function setupEventListeners() {
     const volumeSlider = document.getElementById('volume-slider');
     const volumeValue = document.getElementById('volume-value');
 
-    // أزرار الصوت
+    // أزرار تشغيل وإيقاف الصوت (أيقونة فقط)
     audioToggleBtn.addEventListener('click', toggleAudio);
     modalAudioBtn.addEventListener('click', toggleAudio);
 
@@ -388,6 +443,21 @@ function setupEventListeners() {
         const val = e.target.value;
         volumeValue.textContent = `${val}%`;
         setVolume(val / 100);
+    });
+
+    // أزرار اختيار المدن (نقر مباشر يعمل 100% على التلفاز والماوس)
+    document.querySelectorAll('.city-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const chosenCity = btn.dataset.city;
+            applyCity(chosenCity);
+        });
+    });
+
+    // أزرار السكنات
+    document.querySelectorAll('.theme-card').forEach(card => {
+        card.addEventListener('click', () => {
+            applyTheme(card.dataset.theme);
+        });
     });
 
     // فتح وإغلاق النافذة
@@ -405,26 +475,12 @@ function setupEventListeners() {
         }
     });
 
-    // اختيار السكن
-    document.querySelectorAll('.theme-card').forEach(card => {
-        card.addEventListener('click', () => {
-            applyTheme(card.dataset.theme);
-        });
-    });
-
-    // حفظ الإعدادات
+    // حفظ وإغلاق
     saveBtn.addEventListener('click', () => {
-        const selectedCity = document.getElementById('city-selector').value;
         const newAnnouncement = document.getElementById('announcement-input').value.trim();
-
-        if (selectedCity !== state.cityKey) {
-            applyCity(selectedCity);
-        }
-
         if (newAnnouncement) {
             applyAnnouncement(newAnnouncement);
         }
-
         modal.classList.add('hidden');
     });
 }
@@ -433,7 +489,7 @@ function setupEventListeners() {
 // بدء التشغيل
 // ========================================================
 window.addEventListener('DOMContentLoaded', () => {
-    // تطبيق السكن والمدينة والإعلان المحفوظ
+    // تطبيق السكن والمدينة والإعلانات
     applyTheme(state.theme);
     applyCity(state.cityKey);
     applyAnnouncement(state.announcement);
@@ -447,8 +503,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // أوقات الصلاة والعد التنازلي
     setInterval(updateNextPrayer, 1000);
-    setInterval(fetchPrayerTimes, 6 * 60 * 60 * 1000); // تحديث المواقيت كل 6 ساعات
+    setInterval(fetchPrayerTimes, 6 * 60 * 60 * 1000);
 
     // الطقس
-    setInterval(fetchWeather, 20 * 60 * 1000); // تحديث الطقس كل 20 دقيقة
+    setInterval(fetchWeather, 20 * 60 * 1000);
 });
